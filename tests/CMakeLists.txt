@@ -11,7 +11,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(SparseSet_Tests test_main.cpp)
 
 target_link_libraries(SparseSet_Tests PRIVATE
-        SparseSet
+        NO-Sparse-Set
         GTest::gtest_main
 )
 
