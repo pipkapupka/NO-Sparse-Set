@@ -18,4 +18,8 @@ int main() {
     std::cout << set.get(12) << std::endl;
     std::cout << set.get(5) << std::endl;
     std::cout << set.get(9) << std::endl;
+
+    for (const int & i : set) {
+        std::cout << i << std::endl;
+    }
 }

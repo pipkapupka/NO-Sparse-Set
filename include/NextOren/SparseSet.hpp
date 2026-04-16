@@ -48,8 +48,38 @@ namespace NO {
             return &dense_data_[sparse_array_[entity_id]];
         }
 
-        typename std::vector<Component>::iterator begin() noexcept {};
-        typename std::vector<Component>::iterator end() noexcept {};
+        class Iterator {
+        public:
+            explicit Iterator(const typename std::vector<Component>::iterator comp) : comp_(comp) {}
+
+            Component& operator*() {
+                return *comp_;
+            }
+
+            Component* operator->() {
+                return comp_;
+            }
+
+            Iterator& operator++() {
+                ++comp_;
+                return *this;
+            }
+
+            bool operator!=(const Iterator& rhs) const {
+                return comp_ != rhs.comp_;
+            }
+
+        private:
+            typename std::vector<Component>::iterator comp_;
+        };
+
+        Iterator begin() noexcept {
+            return dense_data_.begin();
+        }
+
+        Iterator end() noexcept {
+            return dense_data_.end();
+        }
 
     private:
         std::vector<Component> dense_data_;
