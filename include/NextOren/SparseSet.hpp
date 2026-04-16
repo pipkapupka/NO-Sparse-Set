@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
+#include <stdexcept>
 
 namespace NO {
     constexpr unsigned int NULL_INDEX = std::numeric_limits<unsigned int>::max();
@@ -18,19 +19,33 @@ namespace NO {
                 sparse_array_.resize(entity_id + 1, NULL_INDEX);
             }
 
-            if (!dense_entities_.empty()) sparse_array_[entity_id] = dense_entities_.size() - 1;
+            if (!dense_entities_.empty()) {
+                sparse_array_[entity_id] = dense_entities_.size() - 1;
+            }
         }
 
-        bool contains(unsigned int entity_id) const {
-            return true;
+        [[nodiscard]] bool contains(const unsigned int entity_id) const {
+            if (entity_id > sparse_array_.size()) {
+                return false;
+            }
+
+            const auto index = sparse_array_[entity_id];
+            if (index >= dense_data_.size()) {
+                return false;
+            }
+
+            return dense_entities_[index] == entity_id;
         }
 
         void erase(unsigned int entity_id) {
 
         }
 
-        Component& get(unsigned int entity_id) {
-
+        Component* get(const unsigned int entity_id) {
+            if (!contains(entity_id)) {
+                return nullptr;
+            }
+            return &dense_data_[sparse_array_[entity_id]];
         }
 
         typename std::vector<Component>::iterator begin() noexcept {};
