@@ -56,6 +56,26 @@ namespace NO {
             return &dense_data_[sparse_array_[entity_id]];
         }
 
+        void print() {
+            for (auto i = sparse_array_.size() - 1; i > 0; i--) {
+                std::cout << sparse_array_[i] << " | ";
+            }
+            std::cout << sparse_array_[0];
+            std::cout << '\n';
+
+            for (auto i = dense_entities_.size() - 1; i > 0; i--) {
+                std::cout << dense_entities_[i] << " | ";
+            }
+            std::cout << dense_entities_[0];
+            std::cout << '\n';
+
+            for (auto i = dense_data_.size() - 1; i > 0; --i) {
+                std::cout << dense_data_[i] << " | ";
+            }
+            std::cout << dense_data_[0];
+            std::cout << '\n';
+        }
+
         class Iterator {
         public:
             explicit Iterator(const typename std::vector<Component>::iterator comp) : comp_(comp) {}
