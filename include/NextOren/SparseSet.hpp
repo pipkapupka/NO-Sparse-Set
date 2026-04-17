@@ -37,8 +37,16 @@ namespace NO {
             return dense_entities_[index] == entity_id;
         }
 
-        void erase(unsigned int entity_id) {
-
+        void erase(const unsigned int entity_id) {
+            if (contains(entity_id)) {
+                const auto index = sparse_array_[entity_id];
+                std::swap(dense_entities_[index], dense_entities_.back());
+                std::swap(dense_data_[index], dense_data_.back());
+                dense_entities_.pop_back();
+                dense_data_.pop_back();
+                
+                sparse_array_[entity_id] = NULL_INDEX;
+            }
         }
 
         Component* get(const unsigned int entity_id) {
