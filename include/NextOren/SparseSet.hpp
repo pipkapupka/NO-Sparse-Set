@@ -1,9 +1,12 @@
 #pragma once
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 #include <limits>
+#include <iostream>
 #include <stdexcept>
+#include <tuple>
 
 namespace NO {
     constexpr unsigned int NULL_INDEX = std::numeric_limits<unsigned int>::max();
@@ -11,6 +14,118 @@ namespace NO {
     template<typename Component, typename Allocator = std::allocator<Component>>
     class SparseSet {
     public:
+        class Iterator {
+        public:
+            using difference_type = std::ptrdiff_t;
+            using value_type = std::pair<unsigned int, Component>;
+            using pointer = Component*;
+            using reference = std::tuple<unsigned int, Component&>;
+            using iterator_category = std::random_access_iterator_tag;
+
+            explicit Iterator(std::tuple<unsigned int, Component*> iterator) : iter_(iterator) {}
+
+            pointer operator->() {
+                return std::get<1>(iter_);
+            }
+
+            reference operator*() {
+                return {*std::get<0>(iter_), *std::get<1>(iter_)};
+            }
+
+            Iterator& operator++() {
+                ++std::get<0>(iter_);
+                ++std::get<1>(iter_);
+                return *this;
+            }
+
+            Iterator& operator++(int) {
+                Iterator& copy = *this;
+                ++std::get<0>(iter_);
+                ++std::get<1>(iter_);
+                return copy;
+            }
+
+            bool operator==(const Iterator& other) {
+                return std::get<0>(iter_) == std::get<0>(other.iter_) &&
+                       std::get<1>(iter_) == std::get<1>(other.iter_);
+            }
+
+            bool operator!=(const Iterator& other) {
+                return !(*this == other);
+            }
+
+            Iterator& operator=(const Iterator& other) {
+                std::get<0>(iter_) = std::get<0>(other.iter_);
+                std::get<1>(iter_) = std::get<1>(other.iter_);
+                return *this;
+            };
+
+            Iterator& operator--() {
+                --std::get<0>(iter_);
+                --std::get<1>(iter_);
+                return *this;
+            }
+
+            Iterator& operator--(int) {
+                Iterator& copy = *this;
+                --std::get<0>(iter_);
+                --std::get<1>(iter_);
+                return copy;
+            }
+
+            Iterator& operator+=(unsigned int offset) {
+                std::get<0>(iter_) += offset;
+                std::get<1>(iter_) += offset;
+                return *this;
+            }
+
+            Iterator& operator-=(unsigned int offset) {
+                std::get<0>(iter_) -= offset;
+                std::get<1>(iter_) -= offset;
+                return *this;
+            }
+
+            Iterator operator+(unsigned int offset) {
+                Iterator& copy = *this;
+                std::get<0>(copy) += offset;
+                std::get<1>(copy) += offset;
+                return copy;
+            }
+
+            Iterator operator-(unsigned int offset) {
+                Iterator& copy = *this;
+                std::get<0>(copy) -= offset;
+                std::get<1>(copy) -= offset;
+                return copy;
+            }
+
+            auto operator[](unsigned int index) {
+                /* TODO:
+                 *  1. Реализовать *(it + n) для обеих объектов кортежа reference
+                 *  2. Вернуть прокси кортеж std::tuple из reference
+                 */
+
+                // return proxy;
+            }
+
+            /* TODO:
+             * it-> it* (✓)
+             * it++ ++it (✓)
+             * it == other && it != other (✓)
+             * iterator (✓)
+             * operator= (✓)
+             * it-- --it (✓)
+             * it += n; it -= n (✓)
+             * it + n; n + it; it - n; (✓)
+             * it[n] (-)
+             * it1 - it (-)
+             * < > <= >= (-)
+             */
+
+        private:
+            std::tuple<unsigned int*, Component*> iter_;
+        };
+
         void insert(const unsigned int entity_id, const Component &component) {
             dense_entities_.push_back(entity_id);
             dense_data_.push_back(component);
@@ -44,7 +159,7 @@ namespace NO {
                 std::swap(dense_data_[index], dense_data_.back());
                 dense_entities_.pop_back();
                 dense_data_.pop_back();
-                
+
                 sparse_array_[entity_id] = NULL_INDEX;
             }
         }
@@ -74,39 +189,6 @@ namespace NO {
             }
             std::cout << dense_data_[0];
             std::cout << '\n';
-        }
-
-        class Iterator {
-        public:
-            explicit Iterator(const typename std::vector<Component>::iterator comp) : comp_(comp) {}
-
-            Component& operator*() {
-                return *comp_;
-            }
-
-            Component* operator->() {
-                return comp_;
-            }
-
-            Iterator& operator++() {
-                ++comp_;
-                return *this;
-            }
-
-            bool operator!=(const Iterator& rhs) const {
-                return comp_ != rhs.comp_;
-            }
-
-        private:
-            typename std::vector<Component>::iterator comp_;
-        };
-
-        Iterator begin() noexcept {
-            return dense_data_.begin();
-        }
-
-        Iterator end() noexcept {
-            return dense_data_.end();
         }
 
     private:

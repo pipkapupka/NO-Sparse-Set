@@ -19,7 +19,15 @@ int main() {
     std::cout << set.get(5) << std::endl;
     std::cout << set.get(9) << std::endl;
 
-    for (const int & i : set) {
-        std::cout << i << std::endl;
-    }
+    set.print();
+
+    set.erase(11);
+
+    std::cout << "--------------" << std::endl;
+    std::cout << set.get(11) << std::endl;
+    std::cout << set.get(5) << std::endl;
+    std::cout << set.get(10) << std::endl;
+    std::cout << set.get(20) << std::endl;
+
+    set.print();
 }
