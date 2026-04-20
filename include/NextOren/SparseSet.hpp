@@ -32,6 +32,7 @@ namespace NO {
                 return {*std::get<0>(iter_), *std::get<1>(iter_)};
             }
 
+            /* TODO: check local objects inside refs returning methods (i'm returning local objects by ref return - need to fix) */
             Iterator& operator++() {
                 ++std::get<0>(iter_);
                 ++std::get<1>(iter_);
