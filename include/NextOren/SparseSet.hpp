@@ -8,6 +8,14 @@
 #include <stdexcept>
 #include <tuple>
 
+/*
+ * TODO:
+ * - исправить баг в методе erase
+ * - исправить методы сравнения (сравнивать кортежи целиком)
+ * - реализовать generic copy constuctor
+ * - добавить >= в метод insert
+ */
+
 namespace NO {
     constexpr unsigned int NULL_INDEX = std::numeric_limits<unsigned int>::max();
 
@@ -131,26 +139,9 @@ namespace NO {
                 return std::get<0>(lhs.iter_) - std::get<0>(rhs.iter_);
             }
 
-            /* TODO:
-             * it-> it* (✓)
-             * it++ ++it (✓)
-             * it == other && it != other (✓)
-             * iterator (✓)
-             * operator= (✓)
-             * it-- --it (✓)
-             * it += n; it -= n (✓)
-             * it + n; n + it; it - n; (✓)
-             * it[n] (✓)
-             * it1 - it2 (✓)
-             * < > <= >= (✓)
-             */
-
         private:
             std::tuple<EntityIndexType, PointerType> iter_;
         };
-
-        using iterator = Iterator<unsigned int*, Component*, std::tuple<unsigned int, Component&>>;
-        using const_iterator = Iterator<const unsigned int*, const Component*, std::tuple<unsigned int, const Component&>>;
 
         void insert(const unsigned int entity_id, const Component &component) {
             dense_entities_.push_back(entity_id);
@@ -196,6 +187,9 @@ namespace NO {
             }
             return &dense_data_[sparse_array_[entity_id]];
         }
+
+        using iterator = Iterator<unsigned int*, Component*, std::tuple<unsigned int, Component&>>;
+        using const_iterator = Iterator<const unsigned int*, const Component*, std::tuple<unsigned int, const Component&>>;
 
         iterator begin() {
             auto iter = iterator(std::make_tuple(dense_entities_.data(), dense_data_.data()));
