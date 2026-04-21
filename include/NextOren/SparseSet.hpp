@@ -14,6 +14,19 @@ namespace NO {
     template<typename Component, typename Allocator = std::allocator<Component>>
     class SparseSet {
     public:
+        void insert(const unsigned int entity_id, const Component &component) {
+            dense_entities_.push_back(entity_id);
+            dense_data_.push_back(component);
+
+            if (entity_id > sparse_array_.size()) {
+                sparse_array_.resize(entity_id + 1, NULL_INDEX);
+            }
+
+            if (!dense_entities_.empty()) {
+                sparse_array_[entity_id] = dense_entities_.size() - 1;
+            }
+        }
+
         class Iterator {
         public:
             using difference_type = std::ptrdiff_t;
@@ -22,7 +35,7 @@ namespace NO {
             using reference = std::tuple<unsigned int, Component&>;
             using iterator_category = std::random_access_iterator_tag;
 
-            explicit Iterator(std::tuple<unsigned int, Component*> iterator) : iter_(iterator) {}
+            explicit Iterator(std::tuple<unsigned int*, Component*> iterator) : iter_(iterator) {}
 
             pointer operator->() {
                 return std::get<1>(iter_);
@@ -32,15 +45,14 @@ namespace NO {
                 return {*std::get<0>(iter_), *std::get<1>(iter_)};
             }
 
-            /* TODO: check local objects inside refs returning methods (i'm returning local objects by ref return - need to fix) */
             Iterator& operator++() {
                 ++std::get<0>(iter_);
                 ++std::get<1>(iter_);
                 return *this;
             }
 
-            Iterator& operator++(int) {
-                Iterator& copy = *this;
+            Iterator operator++(int) {
+                Iterator copy = *this;
                 ++std::get<0>(iter_);
                 ++std::get<1>(iter_);
                 return copy;
@@ -48,7 +60,7 @@ namespace NO {
 
             bool operator==(const Iterator& other) {
                 return std::get<0>(iter_) == std::get<0>(other.iter_) &&
-                       std::get<1>(iter_) == std::get<1>(other.iter_);
+                    std::get<1>(iter_) == std::get<1>(other.iter_);
             }
 
             bool operator!=(const Iterator& other) {
@@ -67,46 +79,68 @@ namespace NO {
                 return *this;
             }
 
-            Iterator& operator--(int) {
-                Iterator& copy = *this;
+            Iterator operator--(int) {
+                Iterator copy = *this;
                 --std::get<0>(iter_);
                 --std::get<1>(iter_);
                 return copy;
             }
 
-            Iterator& operator+=(unsigned int offset) {
+            Iterator& operator+=(difference_type offset) {
                 std::get<0>(iter_) += offset;
                 std::get<1>(iter_) += offset;
                 return *this;
             }
 
-            Iterator& operator-=(unsigned int offset) {
+            Iterator& operator-=(difference_type offset) {
                 std::get<0>(iter_) -= offset;
                 std::get<1>(iter_) -= offset;
                 return *this;
             }
 
-            Iterator operator+(unsigned int offset) {
-                Iterator& copy = *this;
-                std::get<0>(copy) += offset;
-                std::get<1>(copy) += offset;
+            Iterator operator+(difference_type offset) {
+                Iterator copy = *this;
+                std::get<0>(copy.iter_) += offset;
+                std::get<1>(copy.iter_) += offset;
                 return copy;
             }
 
-            Iterator operator-(unsigned int offset) {
-                Iterator& copy = *this;
-                std::get<0>(copy) -= offset;
-                std::get<1>(copy) -= offset;
+            friend Iterator operator+(difference_type offset, const Iterator& other) {
+                Iterator copy = other;
+                std::get<0>(copy.iter_) += offset;
+                std::get<1>(copy.iter_) += offset;
                 return copy;
             }
 
-            auto operator[](unsigned int index) {
-                /* TODO:
-                 *  1. Реализовать *(it + n) для обеих объектов кортежа reference
-                 *  2. Вернуть прокси кортеж std::tuple из reference
-                 */
+            Iterator operator-(difference_type offset) {
+                Iterator copy = *this;
+                std::get<0>(copy.iter_) -= offset;
+                std::get<1>(copy.iter_) -= offset;
+                return copy;
+            }
 
-                // return proxy;
+            auto operator[](difference_type index) {
+                return *(*this + index);
+            }
+
+            friend bool operator<(const Iterator& lhs,const Iterator& rhs) {
+                return std::get<1>(lhs.iter_) < std::get<1>(rhs.iter_);
+            }
+
+            friend bool operator>(const Iterator& lhs,const Iterator& rhs) {
+                return std::get<1>(lhs.iter_) > std::get<1>(rhs.iter_);
+            }
+
+            friend bool operator<=(const Iterator& lhs, const Iterator& rhs) {
+                return !(lhs.iter_ > rhs.iter_);
+            }
+
+            friend bool operator>=(const Iterator& lhs, const Iterator& rhs) {
+                return !(lhs.iter_ < rhs.iter_);
+            }
+
+            friend difference_type operator-(const Iterator& lhs, const Iterator& rhs) {
+                return std::get<0>(lhs.iter_) - std::get<0>(rhs.iter_);
             }
 
             /* TODO:
@@ -118,27 +152,14 @@ namespace NO {
              * it-- --it (✓)
              * it += n; it -= n (✓)
              * it + n; n + it; it - n; (✓)
-             * it[n] (-)
-             * it1 - it (-)
-             * < > <= >= (-)
+             * it[n] (✓)
+             * it1 - it2 (✓)
+             * < > <= >= (✓)
              */
 
         private:
             std::tuple<unsigned int*, Component*> iter_;
         };
-
-        void insert(const unsigned int entity_id, const Component &component) {
-            dense_entities_.push_back(entity_id);
-            dense_data_.push_back(component);
-
-            if (entity_id > sparse_array_.size()) {
-                sparse_array_.resize(entity_id + 1, NULL_INDEX);
-            }
-
-            if (!dense_entities_.empty()) {
-                sparse_array_[entity_id] = dense_entities_.size() - 1;
-            }
-        }
 
         [[nodiscard]] bool contains(const unsigned int entity_id) const {
             if (entity_id > sparse_array_.size()) {
