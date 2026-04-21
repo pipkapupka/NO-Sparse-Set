@@ -14,34 +14,22 @@ namespace NO {
     template<typename Component, typename Allocator = std::allocator<Component>>
     class SparseSet {
     public:
-        void insert(const unsigned int entity_id, const Component &component) {
-            dense_entities_.push_back(entity_id);
-            dense_data_.push_back(component);
-
-            if (entity_id > sparse_array_.size()) {
-                sparse_array_.resize(entity_id + 1, NULL_INDEX);
-            }
-
-            if (!dense_entities_.empty()) {
-                sparse_array_[entity_id] = dense_entities_.size() - 1;
-            }
-        }
-
+        template<typename EntityIndexType, typename PointerType, typename ReferenceType>
         class Iterator {
         public:
             using difference_type = std::ptrdiff_t;
             using value_type = std::pair<unsigned int, Component>;
-            using pointer = Component*;
-            using reference = std::tuple<unsigned int, Component&>;
+            using pointer = PointerType;
+            using reference = ReferenceType;
             using iterator_category = std::random_access_iterator_tag;
 
-            explicit Iterator(std::tuple<unsigned int*, Component*> iterator) : iter_(iterator) {}
+            explicit Iterator(std::tuple<EntityIndexType, PointerType> iterator) : iter_(iterator) {}
 
-            pointer operator->() {
+            pointer operator->() const {
                 return std::get<1>(iter_);
             }
 
-            reference operator*() {
+            reference operator*() const {
                 return {*std::get<0>(iter_), *std::get<1>(iter_)};
             }
 
@@ -58,12 +46,12 @@ namespace NO {
                 return copy;
             }
 
-            bool operator==(const Iterator& other) {
+            bool operator==(const Iterator& other) const {
                 return std::get<0>(iter_) == std::get<0>(other.iter_) &&
                     std::get<1>(iter_) == std::get<1>(other.iter_);
             }
 
-            bool operator!=(const Iterator& other) {
+            bool operator!=(const Iterator& other) const {
                 return !(*this == other);
             }
 
@@ -119,7 +107,7 @@ namespace NO {
                 return copy;
             }
 
-            auto operator[](difference_type index) {
+            decltype(auto) operator[](difference_type index) const {
                 return *(*this + index);
             }
 
@@ -158,8 +146,24 @@ namespace NO {
              */
 
         private:
-            std::tuple<unsigned int*, Component*> iter_;
+            std::tuple<EntityIndexType, PointerType> iter_;
         };
+
+        using iterator = Iterator<unsigned int*, Component*, std::tuple<unsigned int, Component&>>;
+        using const_iterator = Iterator<const unsigned int*, const Component*, std::tuple<unsigned int, const Component&>>;
+
+        void insert(const unsigned int entity_id, const Component &component) {
+            dense_entities_.push_back(entity_id);
+            dense_data_.push_back(component);
+
+            if (entity_id > sparse_array_.size()) {
+                sparse_array_.resize(entity_id + 1, NULL_INDEX);
+            }
+
+            if (!dense_entities_.empty()) {
+                sparse_array_[entity_id] = dense_entities_.size() - 1;
+            }
+        }
 
         [[nodiscard]] bool contains(const unsigned int entity_id) const {
             if (entity_id > sparse_array_.size()) {
@@ -191,6 +195,34 @@ namespace NO {
                 return nullptr;
             }
             return &dense_data_[sparse_array_[entity_id]];
+        }
+
+        iterator begin() {
+            auto iter = iterator(std::make_tuple(dense_entities_.data(), dense_data_.data()));
+            return iter;
+        }
+
+        iterator end() {
+            auto iter = iterator(std::make_tuple(dense_entities_.data() + dense_entities_.size(), dense_data_.data() + dense_data_.size()));
+            return iter;
+        }
+
+        const_iterator begin() const {
+            auto const_iter = const_iterator(std::make_tuple(dense_entities_.data(), dense_data_.data()));
+            return const_iter;
+        }
+
+        const_iterator end() const {
+            auto const_iter = const_iterator(std::make_tuple(dense_entities_.data() + dense_entities_.size(), dense_data_.data() + dense_data_.size()));
+            return const_iter;
+        }
+
+        const_iterator cbegin() const {
+            return begin();
+        }
+
+        const_iterator cend() const {
+            return end();
         }
 
         void print() {

@@ -8,26 +8,32 @@ int main() {
     set.insert(11, 323412);
     set.insert(5, 1);
 
-    std::cout << set.contains(11) << std::endl;
-    std::cout << set.contains(12) << std::endl;
-    std::cout << set.contains(1) << std::endl;
-    std::cout << set.contains(5) << std::endl;
-    std::cout << set.contains(1231231) << std::endl;
+    auto const const_set = set;
 
-    std::cout << set.get(11) << std::endl;
-    std::cout << set.get(12) << std::endl;
-    std::cout << set.get(5) << std::endl;
-    std::cout << set.get(9) << std::endl;
+    // std::cout << set.contains(11) << std::endl;
+    // std::cout << set.contains(12) << std::endl;
+    // std::cout << set.contains(1) << std::endl;
+    // std::cout << set.contains(5) << std::endl;
+    // std::cout << set.contains(1231231) << std::endl;
 
-    set.print();
+    // std::cout << set.get(11) << std::endl;
+    // std::cout << set.get(12) << std::endl;
+    // std::cout << set.get(5) << std::endl;
+    // std::cout << set.get(9) << std::endl;
 
-    set.erase(11);
+    // set.print();
 
-    std::cout << "--------------" << std::endl;
-    std::cout << set.get(11) << std::endl;
-    std::cout << set.get(5) << std::endl;
-    std::cout << set.get(10) << std::endl;
-    std::cout << set.get(20) << std::endl;
+    // set.erase(11);
 
-    set.print();
+    // std::cout << "--------------" << std::endl;
+    // std::cout << set.get(11) << std::endl;
+    // std::cout << set.get(5) << std::endl;
+    // std::cout << set.get(10) << std::endl;
+    // std::cout << set.get(20) << std::endl;
+
+    // set.print();
+
+    for (auto [first, second] : const_set) {
+        std::cout << second << std::endl;
+    }
 }
