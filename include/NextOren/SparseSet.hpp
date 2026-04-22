@@ -7,13 +7,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <tuple>
-/*
- * TODO:
- * - исправить баг в методе erase (+)
- * - исправить методы сравнения (сравнивать кортежи целиком) (+)
- * - реализовать generic copy constuctor (+)
- * - добавить >= в метод insert (+)
- */
 
 namespace NO {
     constexpr unsigned int NULL_INDEX = std::numeric_limits<unsigned int>::max();
