@@ -31,9 +31,15 @@ int main() {
     // std::cout << set.get(10) << std::endl;
     // std::cout << set.get(20) << std::endl;
 
-    // set.print();
+    set.print();
 
-    for (auto [first, second] : const_set) {
-        std::cout << second << std::endl;
-    }
+    // for (auto [first, second] : const_set) {
+    //     std::cout << second << std::endl;
+    // }
+    //
+    // auto it = set.begin();
+    // NO::SparseSet<int>::const_iterator it_c = it;
+    // for (auto [first, second] : const_set) {
+    //     first = 1;
+    // }
 }

@@ -7,13 +7,12 @@
 #include <iostream>
 #include <stdexcept>
 #include <tuple>
-
 /*
  * TODO:
- * - исправить баг в методе erase
- * - исправить методы сравнения (сравнивать кортежи целиком)
- * - реализовать generic copy constuctor
- * - добавить >= в метод insert
+ * - исправить баг в методе erase (+)
+ * - исправить методы сравнения (сравнивать кортежи целиком) (+)
+ * - реализовать generic copy constuctor (+)
+ * - добавить >= в метод insert (+)
  */
 
 namespace NO {
@@ -24,6 +23,7 @@ namespace NO {
     public:
         template<typename EntityIndexType, typename PointerType, typename ReferenceType>
         class Iterator {
+            std::tuple<EntityIndexType, PointerType> iter_;
         public:
             using difference_type = std::ptrdiff_t;
             using value_type = std::pair<unsigned int, Component>;
@@ -32,6 +32,10 @@ namespace NO {
             using iterator_category = std::random_access_iterator_tag;
 
             explicit Iterator(std::tuple<EntityIndexType, PointerType> iterator) : iter_(iterator) {}
+
+            template <typename EIT, typename PT, typename RT>
+            Iterator(const Iterator<EIT, PT, RT>& other) : iter_(other.iter_) {}
+            template <typename, typename, typename> friend class Iterator;
 
             pointer operator->() const {
                 return std::get<1>(iter_);
@@ -120,11 +124,11 @@ namespace NO {
             }
 
             friend bool operator<(const Iterator& lhs,const Iterator& rhs) {
-                return std::get<1>(lhs.iter_) < std::get<1>(rhs.iter_);
+                return lhs.iter_ < rhs.iter_;
             }
 
             friend bool operator>(const Iterator& lhs,const Iterator& rhs) {
-                return std::get<1>(lhs.iter_) > std::get<1>(rhs.iter_);
+                return lhs.iter_ > rhs.iter_;
             }
 
             friend bool operator<=(const Iterator& lhs, const Iterator& rhs) {
@@ -138,16 +142,13 @@ namespace NO {
             friend difference_type operator-(const Iterator& lhs, const Iterator& rhs) {
                 return std::get<0>(lhs.iter_) - std::get<0>(rhs.iter_);
             }
-
-        private:
-            std::tuple<EntityIndexType, PointerType> iter_;
         };
 
         void insert(const unsigned int entity_id, const Component &component) {
             dense_entities_.push_back(entity_id);
             dense_data_.push_back(component);
 
-            if (entity_id > sparse_array_.size()) {
+            if (entity_id >= sparse_array_.size()) {
                 sparse_array_.resize(entity_id + 1, NULL_INDEX);
             }
 
@@ -171,6 +172,7 @@ namespace NO {
 
         void erase(const unsigned int entity_id) {
             if (contains(entity_id)) {
+                const auto moved_entity_id = dense_entities_.back();
                 const auto index = sparse_array_[entity_id];
                 std::swap(dense_entities_[index], dense_entities_.back());
                 std::swap(dense_data_[index], dense_data_.back());
@@ -178,6 +180,7 @@ namespace NO {
                 dense_data_.pop_back();
 
                 sparse_array_[entity_id] = NULL_INDEX;
+                sparse_array_[moved_entity_id] = index;
             }
         }
 
