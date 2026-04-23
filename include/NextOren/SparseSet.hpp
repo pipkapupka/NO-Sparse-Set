@@ -12,6 +12,7 @@ namespace NO {
     class SparseSet {
     public:
         void insert(const unsigned int entity_id, const Component &component) {
+            if (contains(entity_id)) return;
             dense_entities_.push_back(entity_id);
             dense_data_.push_back(component);
 
