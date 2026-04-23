@@ -52,8 +52,7 @@ namespace NO {
             }
 
             bool operator==(const Iterator& other) const {
-                return std::get<0>(iter_) == std::get<0>(other.iter_) &&
-                    std::get<1>(iter_) == std::get<1>(other.iter_);
+                return iter_ == other.iter_;
             }
 
             bool operator!=(const Iterator& other) const {
@@ -151,12 +150,12 @@ namespace NO {
         }
 
         [[nodiscard]] bool contains(const unsigned int entity_id) const {
-            if (entity_id > sparse_array_.size()) {
+            if (entity_id >= sparse_array_.size()) {
                 return false;
             }
 
             const auto index = sparse_array_[entity_id];
-            if (index >= dense_data_.size()) {
+            if (index >= dense_entities_.size()) {
                 return false;
             }
 
@@ -165,15 +164,18 @@ namespace NO {
 
         void erase(const unsigned int entity_id) {
             if (contains(entity_id)) {
-                const auto moved_entity_id = dense_entities_.back();
                 const auto index = sparse_array_[entity_id];
-                std::swap(dense_entities_[index], dense_entities_.back());
-                std::swap(dense_data_[index], dense_data_.back());
+                if (const auto latest_index = dense_entities_.size() - 1;
+                    index != latest_index) {
+
+                    dense_entities_[index] = dense_entities_[latest_index];
+                    dense_data_[index] = dense_data_[latest_index];
+
+                    sparse_array_[dense_entities_[latest_index]] = index;
+                }
                 dense_entities_.pop_back();
                 dense_data_.pop_back();
-
                 sparse_array_[entity_id] = NULL_INDEX;
-                sparse_array_[moved_entity_id] = index;
             }
         }
 
