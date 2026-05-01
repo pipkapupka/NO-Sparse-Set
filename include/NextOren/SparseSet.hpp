@@ -13,6 +13,7 @@ namespace NO {
     public:
         void insert(const unsigned int entity_id, const Component &component) {
             if (contains(entity_id)) return;
+            /* Добавляем данные в конец массива для плотности и кэш-локальности*/
             dense_entities_.push_back(entity_id);
             dense_data_.push_back(component);
 
@@ -20,35 +21,47 @@ namespace NO {
                 sparse_array_.resize(entity_id + 1, NULL_INDEX);
             }
 
-            if (!dense_entities_.empty()) {
-                sparse_array_[entity_id] = dense_entities_.size() - 1;
-            }
+            /* Связываем sparse_array с только что добавленным в конец entity_id */
+            sparse_array_[entity_id] = dense_entities_.size() - 1;
         }
 
         [[nodiscard]] bool contains(const unsigned int entity_id) const {
+            /* Если entity_id больше чем размер разряженного массива, значит такого энтити в плотных нет */
             if (entity_id >= sparse_array_.size()) {
                 return false;
             }
 
-            const auto index = sparse_array_[entity_id];
+            const auto index = sparse_array_[entity_id]; // Получаем номер ячейки в плотном массиве, хранящий entity_id
+
+            /* Индекс должен быть меньше чем размер плотного массива*/
             if (index >= dense_entities_.size()) {
                 return false;
             }
 
+            /* Сравниваем номер ячейки с нужным нам содержимым и возвращаем результат */
             return dense_entities_[index] == entity_id;
         }
 
         void erase(const unsigned int entity_id) {
             if (contains(entity_id)) {
-                const auto index = sparse_array_[entity_id];
+                const auto index = sparse_array_[entity_id]; // Получаем номер ячейки в плотном массиве, хранящий entity_id
+
+                /*
+                 * Получаем номер последней ячейки в плотном массиве, куда будем `swap-and-pop` элемент
+                 * Также проверяем что мы не собираемся `swap-and-pop` уже последний элемент
+                 */
                 if (const auto latest_index = dense_entities_.size() - 1;
                     index != latest_index) {
 
+                    /* Перезаписываем содержимое индексов на содержимое последних элемента плотных массивов*/
                     dense_entities_[index] = dense_entities_[latest_index];
                     dense_data_[index] = dense_data_[latest_index];
 
+                    /* Берём сущности, которую переставили и делаем её индекс актуальной */
                     sparse_array_[dense_entities_[latest_index]] = index;
                 }
+
+                /* Удаляем свапнутые элементы с конца за O(1) и очищаем маппинг в разряженном массиве */
                 dense_entities_.pop_back();
                 dense_data_.pop_back();
                 sparse_array_[entity_id] = NULL_INDEX;
@@ -59,6 +72,7 @@ namespace NO {
             if (!contains(entity_id)) {
                 return nullptr;
             }
+            /* Возвращаем указатель на компонент внутри плотного массива компонентов по номеру ячейки */
             return &dense_data_[sparse_array_[entity_id]];
         }
 
